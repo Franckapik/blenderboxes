@@ -6,3 +6,5 @@ Tab, clic droit, extension a blendercam ? panneau latéral ?
 Les images sont dans  static : samples 
 
 - Faire un essai de definition de propriété dynamique
+
+Une erreur qui se repete : redemarer le serveur blender

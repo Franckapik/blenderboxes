@@ -56,15 +56,16 @@ class Diffuseur_SideBar(Panel):
             # get the instance of our group
             # dynamic equivalent of `obj.samplePropertyGroup` from before
             propertyGroup = getattr(obj, groupName)
-            print(groupName)
             # start laying this group out
-            col = layout.column()
-            col.label(text="Hello")
+            col = layout.column(align=True)
+            col.label(text=groupName)
+
+            a = FloatProperty(name="A", default=5.0)
 
             # loop through all the attributes and show them
             for attributeDefinition in attributeDefinitions:
-                col.prop(propertyGroup, attributeDefinition["name"])
-
+                print(dir(propertyGroup))
+                col.prop(propertyGroup, str(attributeDefinition["name"]))
             # draw a separation between groups
             layout.separator()
 
