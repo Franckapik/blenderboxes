@@ -1,17 +1,22 @@
 import bpy
 import sys
 
-sys.path.insert(1,"/home/fanch/Documents/blenderboxes/boxes")
+sys.path.insert(1, "/home/fanch/Documents/blenderboxes/boxes")
 
-import boxes #in blender scripts/startup
+import boxes  # in blender scripts/startup
 import boxes.generators
+
+import argparse
+
 
 from bpy.props import (
     FloatProperty,
     BoolProperty,
     IntProperty,
     FloatVectorProperty,
+    StringProperty,
     EnumProperty,
+    CollectionProperty,
 )
 
 productType = (
@@ -21,17 +26,53 @@ productType = (
     ("3", "Moule", ""),
 )
 
-available_objects = []
-
 
 def listGenerators():
+    genByName = []
+
     all_generators = boxes.generators.getAllBoxGenerators()
     for index, gen in enumerate(all_generators):
-        name = gen.split('.')[-1].lower()
-        available_objects.append((str(index), name, ""))  
-    return available_objects  
+        name = gen.split(".")[-1].lower()
+        genByName.append((str(index), name, ""))
+    return genByName
 
-   
+
+def listArgs(box):
+    listeArguments = []
+    for group in box.argparser._action_groups:
+        argument = {}
+        argument["group"] = group.title
+        listParams = []
+        for param in group._group_actions:
+            paramObj = {}
+            dest = param.dest
+            type = param.type
+            if not (
+                isinstance(param, argparse._HelpAction)
+                and isinstance(param, argparse._StoreAction)
+            ):
+                match dest:
+                    case "input" | "output" | "format" | "layout"  :
+                        pass
+                    case _:
+                        paramObj["dest"] = dest
+                        paramObj["type"] = type
+                        
+                        if param.choices:
+                            uniqueChoices = []
+                            for option in param.choices:
+                                if option not in uniqueChoices:
+                                    uniqueChoices.append(option)
+                            paramObj["options"] = uniqueChoices
+                        else:
+                            paramObj["options"] = None
+                        listParams.append(paramObj)
+        argument["params"] = listParams if len(listParams) > 1 else None
+        listeArguments.append(argument)
+
+    return listeArguments
+
+
 """ class TestCase(bpy.types.Operator):  
    
  bl_idname = "object.testcase"  
@@ -43,8 +84,21 @@ def listGenerators():
 
 
 class generatorProps(bpy.types.PropertyGroup):
-    generators: EnumProperty(name="Generators",items=listGenerators())
-    
+    generators: EnumProperty(name="Generators", items=listGenerators())
+
+    def getGenById(self):
+        return listGenerators()[int(self.generators)]
+
+    def allGen(self):
+        allGen = boxes.generators.getAllBoxGenerators()
+        return {
+            name.split(".")[-1].lower(): generator for name, generator in allGen.items()
+        }
+
+    def getArgs(self):
+        box = list(self.allGen().values())[int(self.generators)]()
+        return listArgs(box)
+        
 
 
 class Usinageprops(bpy.types.PropertyGroup):
@@ -67,13 +121,10 @@ class Usinageprops(bpy.types.PropertyGroup):
             ("0.50", "50%", ""),
         ),
     )
-    
 
     def getOffset(self):
         offset = float(self.offset) * float(self.fraise)
         return round(offset, 4)
-        
-
 
     def listAttributes(self):
         return [
@@ -81,7 +132,6 @@ class Usinageprops(bpy.types.PropertyGroup):
             "offset",
             "offset_peigne",
         ]
-
 
 
 classes = [

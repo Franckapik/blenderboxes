@@ -2,21 +2,11 @@ from bpy.types import Panel, Menu, Operator
 import bpy
 from bl_operators.presets import AddPresetBase
 
-from bpy.props import FloatProperty, StringProperty, PointerProperty
+from bpy.props import FloatProperty, StringProperty, PointerProperty, CollectionProperty
 from bpy.types import PropertyGroup
 
-bpy.propertyGroupLayouts = {
-    "Health": [
-        { "name": "current", "type": "float" },
-        { "name": "max", "type": "float" }
-    ],
-    "Character": [
-        { "name": "first_name", "type": "string" },
-        { "name": "last_name", "type": "string" }
-    ]
-}
-bpy.samplePropertyGroups = {}
-
+import boxes #in blender scripts/startup
+import boxes.generators
 
 class Diffuseur_SideBar(Panel):
     """Diffuseur options panel"""
@@ -31,7 +21,6 @@ class Diffuseur_SideBar(Panel):
         layout = self.layout
         scene = context.scene
         generatorProps = scene.generatorProps
-        wm = context.window_manager
 
         row1 = layout.row(align=True)
         row1.label(text="Boxes")
@@ -43,31 +32,28 @@ class Diffuseur_SideBar(Panel):
         box2.label(text="2eme Box", icon="X")
         box2.prop(generatorProps, "generators")
 
-        """ tex = bpy.data.textures['nameOfTexture']
-        col = layout.box().column()
-        col.template_preview(tex) """
+        listeArguments = generatorProps.getArgs()
 
+        for group in listeArguments:
+            box=layout.box()
+            box.label(text=group['group']) 
+            if group['params'] != None : 
+                for param in group['params'] :
+                    row = box.row()
 
-        #dynamic
-        obj = context.object
+                    row.label(text=param['dest'])
+                    row.label(text=str(param['type']))
 
-        # use our layout definition to dynamically create our panel items
-        for groupName, attributeDefinitions in bpy.propertyGroupLayouts.items():
-            # get the instance of our group
-            # dynamic equivalent of `obj.samplePropertyGroup` from before
-            propertyGroup = getattr(obj, groupName)
-            # start laying this group out
-            col = layout.column(align=True)
-            col.label(text=groupName)
+                    particle = scene.particle_instancer
+                   
+                    if param['type'] is float :
+                        pass
 
-            a = FloatProperty(name="A", default=5.0)
+# Assign a collection.
+class SceneSettingItem(bpy.types.PropertyGroup):
+    name: bpy.props.StringProperty(name="Test Property", default="Unknown")
+    value: bpy.props.IntProperty(name="Test Property", default=22)
 
-            # loop through all the attributes and show them
-            for attributeDefinition in attributeDefinitions:
-                print(dir(propertyGroup))
-                col.prop(propertyGroup, str(attributeDefinition["name"]))
-            # draw a separation between groups
-            layout.separator()
 
 
 ui_classes = [Diffuseur_SideBar]
@@ -76,34 +62,6 @@ def register():
     for cls in ui_classes:
         bpy.utils.register_class(cls)
     
-    #dynamic
-    
-    # iterate over our list of property groups
-    for groupName, attributeDefinitions in bpy.propertyGroupLayouts.items():
-        # build the attribute dictionary for this group
-        attributes = {}
-        for attributeDefinition in attributeDefinitions:
-            attType = attributeDefinition['type']
-            attName = attributeDefinition['name']
-            if attType == 'float':
-                attributes[attName] = FloatProperty(name=attName.title())
-            elif attType == 'string':
-                attributes[attName] = StringProperty(name=attName.title())
-            else:
-                raise TypeError('Unsupported type (%s) for %s on %s!' % (attType, attName, groupName))
-
-        # now build the property group class
-        propertyGroupClass = type(groupName, (PropertyGroup,), attributes)
-
-        # register it with Blender
-        bpy.utils.register_class(propertyGroupClass)
-
-        # apply it to all Objects
-        setattr(bpy.types.Object, groupName, PointerProperty(type=propertyGroupClass))
-
-        # store it for later
-        bpy.samplePropertyGroups[groupName] = propertyGroupClass
-
 
 def unregister():
     for cls in ui_classes:
