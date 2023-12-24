@@ -82,6 +82,11 @@ def listArgs(box):
  objects = EnumProperty(name="Objects", items = availableObjects) 
  """
 
+class Entry(bpy.types.PropertyGroup):
+    name = StringProperty()
+    val = IntProperty()
+    
+
 
 class generatorProps(bpy.types.PropertyGroup):
     generators: EnumProperty(name="Generators", items=listGenerators())
@@ -98,6 +103,7 @@ class generatorProps(bpy.types.PropertyGroup):
     def getArgs(self):
         box = list(self.allGen().values())[int(self.generators)]()
         return listArgs(box)
+    
         
 
 
@@ -137,14 +143,17 @@ class Usinageprops(bpy.types.PropertyGroup):
 classes = [
     generatorProps,
     Usinageprops,
+    Entry
 ]
 
 
 def register():
+
+
     for cls in classes:
         bpy.utils.register_class(cls)
     bpy.types.Scene.generatorProps = bpy.props.PointerProperty(type=generatorProps)
-
+    bpy.types.Scene.Coll = bpy.props.CollectionProperty(type=Entry)
 
 def unregister():
     for cls in classes:

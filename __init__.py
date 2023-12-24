@@ -22,7 +22,7 @@ bl_info = {
     "category" : "Generic"
 }
 
-modulesNames = ['ui', 'props']
+modulesNames = ['uitype', 'props']
 
 import sys
 import importlib
