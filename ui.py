@@ -17,6 +17,7 @@ class Diffuseur_SideBar(Panel):
     bl_region_type = "UI"
     bl_category = "Boxes"
 
+
     def draw(self, context):
         layout = self.layout
         scene = context.scene
@@ -47,20 +48,22 @@ class Diffuseur_SideBar(Panel):
                     particle = scene.particle_instancer
                    
                     if param['type'] is float :
-                        self.layout.prop(bpy.context.scene,"my_float")
+                        self.layout.prop(bpy.context.scene,'key1')
+                        self.layout.prop(bpy.context.scene,'key2')
 
 # Assign a collection.
 class SceneSettingItem(bpy.types.PropertyGroup):
     name: bpy.props.StringProperty(name="Test Property", default="Unknown")
     value: bpy.props.IntProperty(name="Test Property", default=22)
 
+for prop in ['key1', 'key2']:
+    setattr(bpy.types.Scene, prop, bpy.props.FloatProperty(default=0))
+
 
 
 ui_classes = [Diffuseur_SideBar]
 
 def register():
-
-    bpy.types.Scene.my_float = bpy.props.FloatProperty(default=0)
 
     for cls in ui_classes:
         bpy.utils.register_class(cls)
