@@ -47,7 +47,7 @@ class Diffuseur_SideBar(Panel):
                     particle = scene.particle_instancer
                    
                     if param['type'] is float :
-                        pass
+                        self.layout.prop(bpy.context.scene,"my_float")
 
 # Assign a collection.
 class SceneSettingItem(bpy.types.PropertyGroup):
@@ -59,6 +59,9 @@ class SceneSettingItem(bpy.types.PropertyGroup):
 ui_classes = [Diffuseur_SideBar]
 
 def register():
+
+    bpy.types.Scene.my_float = bpy.props.FloatProperty(default=0)
+
     for cls in ui_classes:
         bpy.utils.register_class(cls)
     
