@@ -30,7 +30,7 @@ class Diffuseur_SideBar(Panel):
 
         for ( attributeName ) in box_attributes_names:  # ABox Settings / Default Settings / ...
             box = layout.box()
-            box.titl(text=attributeName)
+            box.label(text=attributeName)
 
             box_group_attributes = getattr(boxe, attributeName)
             group_params_name = tuple( p for p in box_group_attributes.bl_rna.properties.keys() if p not in {"rna_type", "name"} )
