@@ -45,8 +45,12 @@ ess = {name.split(".")[-1].lower(): generator for name, generator in allGen.item
 listboxes = list(ess.values())
 
 
+class Generators(bpy.types.PropertyGroup):
+        pass 
+    
+bpy.utils.register_class(Generators)
+
 for box in listboxes:
-    print(box.__name__)
 
     class MyBox(bpy.types.PropertyGroup):
         pass 
@@ -56,19 +60,21 @@ for box in listboxes:
 
     listeArguments = []
     for group in box().argparser._action_groups:
+        class MyGroup(bpy.types.PropertyGroup):
+            pass 
+    
+        bpy.utils.register_class(MyGroup)
+
         argument = {}
         #cmt faire pour plusieurs group ? group1 group2 etc ? Un autre PropGroup? 
         argument["group"] = group.title
-        setattr(MyBox, "group", bpy.props.StringProperty(default=group.title))
 
         listParams = []
         for param in group._group_actions:
             paramObj = {}
-
             dest = param.dest
             type = param.type
             default = param.default
-            print(default)
             if not (
                 isinstance(param, argparse._HelpAction)
                 and isinstance(param, argparse._StoreAction)
@@ -81,24 +87,27 @@ for box in listboxes:
                         paramObj["type"] = type
 
                         if type is float:
-                            setattr(MyBox, dest, bpy.props.FloatProperty(default=float(default)))
+                            setattr(MyGroup, dest, bpy.props.FloatProperty(default=float(default)))
                         if type is int:
-                            setattr(MyBox, dest, bpy.props.IntProperty(default=default))
+                            setattr(MyGroup, dest, bpy.props.IntProperty(default=default))
                         if type is str:
-                            setattr(MyBox, dest, bpy.props.StringProperty(default=default))
+                            if param.choices:
+                                list_of_choices = []
+                                default_index = 0
+                                for index , choice in enumerate(param.choices):
+                                    list_of_choices.append((str(index), choice, ""))
+                                    if choice == default:
+                                        default_index = index
+                                setattr(MyGroup, dest, bpy.props.EnumProperty(items=list_of_choices, default=default_index))
+
+                            else :
+                                setattr(MyGroup, dest, bpy.props.StringProperty(default=default))
+
+                        if isinstance(type, boxes.BoolArg):
+                            setattr(MyGroup, dest, bpy.props.BoolProperty(default=bool(default)))
+        setattr(MyBox, group.title, bpy.props.PointerProperty(type=MyGroup))
 
 
-                        if param.choices:
-                            uniqueChoices = []
-                            for option in param.choices:
-                                if option not in uniqueChoices:
-                                    uniqueChoices.append(option)
-                            paramObj["options"] = uniqueChoices
-                        else:
-                            paramObj["options"] = None
-                        listParams.append(paramObj)
-        argument["params"] = listParams if len(listParams) > 1 else None
-        listeArguments.append(argument)
-
-        setattr(bpy.types.Scene, box.__name__, bpy.props.PointerProperty(type=MyBox))
+    setattr(Generators, box.__name__, bpy.props.PointerProperty(type=MyBox))
+setattr(bpy.types.Scene, 'generators', bpy.props.PointerProperty(type=Generators))
 
