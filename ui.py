@@ -56,9 +56,20 @@ class Diffuseur_SideBar(Panel):
         layout = self.layout
         scene = context.scene
         generatorProps = scene.generatorProps
+        propGroup = scene.propGroup
+        abox = scene.ABox
+        print(abox)
 
+
+        #cmt iterer dans un PropGroup ?
         row1 = layout.row(align=True)
         row1.label(text="Boxes")
+        row1.prop(propGroup, "p4")
+        row1.prop(propGroup, "p5")
+        row1.prop(propGroup, "p9")
+        row1.prop(abox, "group")
+        row1.label(text="y")
+        row1.prop(abox, "y")
 
         box1 = layout.box()
         box1.label(text="Usinage", icon="X")

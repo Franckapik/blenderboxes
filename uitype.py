@@ -9,6 +9,7 @@ bpy.propertyGroupLayouts = {
         { "name": "max", "type": "float" }
     ],
     "Character": [
+        { "name": "current", "type": "float" },
         { "name": "first_name", "type": "string" },
         { "name": "last_name", "type": "string" }
     ]
@@ -33,19 +34,19 @@ class SamplePanel(bpy.types.Panel):
             # get the instance of our group
             # dynamic equivalent of `obj.samplePropertyGroup` from before
             propertyGroup = getattr(obj, groupName)
-
-            
-
-
+            print(propertyGroup)
+            print(dir(propertyGroup))
             # start laying this group out
             col = layout.column()
             col.label(text=groupName)
+            col.prop(propertyGroup, 'current')
+
 
 
             # loop through all the attributes and show them
             for attributeDefinition in attributeDefinitions:
                 col.prop(propertyGroup, attributeDefinition["name"])
-
+                col.label(text=attributeDefinition["name"])
                 pass
             # draw a separation between groups
             layout.separator()
