@@ -22,7 +22,7 @@ bl_info = {
     "category" : "Generic"
 }
 
-modulesNames = ['ui','dynamic', 'props']
+modulesNames = ['importBoxes','ui']
 
 import sys
 import importlib

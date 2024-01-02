@@ -1,8 +1,5 @@
-from bpy.types import Panel, Menu, Operator
+from bpy.types import Panel, Operator
 import bpy
-from bl_operators.presets import AddPresetBase
-
-from bpy.props import FloatProperty, StringProperty, PointerProperty, CollectionProperty, EnumProperty
 
 import boxes  # in blender scripts/startup
 import boxes.generators
@@ -10,7 +7,6 @@ import bpy, os
 from bpy.types import (
     Operator,
     Panel,
-    PropertyGroup,
 )
 
 import bpy.utils.previews
@@ -85,10 +81,10 @@ class Object_OT_AddButton(Operator):
         box.render()
         box.close()
 
-        bpy.ops.import_curve.svg(filepath=bpy.path.abspath("//boxe.svg"))
-       
-                
+        directory = os.path.join(module_path, "boxe.svg")
 
+
+        bpy.ops.import_curve.svg(filepath= directory)
                 
         return{'FINISHED'}
 
@@ -118,14 +114,6 @@ class Diffuseur_SideBar(Panel):
         row = layout.row()
         row.template_icon_view(wm, "my_previews", show_labels=True)
 
-        """ print(generators.ABox.aboxsettings.x) """
-
-        """ g1 = getattr(generators, selectedBox)
-        g2 = getattr(g1, 'aboxsettings')
-        g3 = getattr(g2, 'x' ) """
-
-
-
         row = layout.row(align=True)
         row.operator("add.object", icon="RESTRICT_RENDER_OFF", text=("Add"))
 
@@ -152,8 +140,6 @@ class Diffuseur_SideBar(Panel):
         
         bpy.types.Scene.args = args
 
-
-
 ui_classes = [Diffuseur_SideBar, Object_OT_AddButton]
 
 preview_collections = {}
@@ -163,13 +149,13 @@ def register():
     for cls in ui_classes:
         bpy.utils.register_class(cls)
     
-    WindowManager.my_previews_dir = StringProperty(
+    WindowManager.my_previews_dir = bpy.props.StringProperty(
     name="Folder Path",
     subtype='DIR_PATH',
     default=""
     )
 
-    WindowManager.my_previews = EnumProperty(
+    WindowManager.my_previews = bpy.props.EnumProperty(
         items=enum_previews_from_directory_items,
     )
 

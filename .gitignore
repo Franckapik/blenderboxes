@@ -1,1 +1,4 @@
 boxes_pkg
+*.code-workspace
+*.blend
+__pycache__
