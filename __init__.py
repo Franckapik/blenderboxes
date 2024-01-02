@@ -13,7 +13,7 @@
 
 bl_info = {
     "name" : "blenderboxes",
-    "author" : "F",
+    "author" : "Franckapik",
     "description" : "",
     "blender" : (2, 80, 0),
     "version" : (0, 0, 1),

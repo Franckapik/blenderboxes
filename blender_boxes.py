@@ -79,7 +79,6 @@ def run_generator(name, args):
         box = generators[lower_name]()
         """ for a in dir(box):
              print(a) """
-        argReader(box)
         box.parseArgs(args)
         box.open()
         box.render()

@@ -16,25 +16,20 @@ from bpy.types import (
 import bpy.utils.previews
 from bpy.types import WindowManager
 
-def enum_previews_from_directory_items(self, context):
+import addon_utils
 
-    
-    #Extensions
-    extensions = ('.jpeg', '.jpg', '.png')
+module_path=None
 
-    blend_dir = os.path.dirname(bpy.data.filepath)
-    filename = bpy.path.abspath("boxes_pkg/static/samples")
-    blenddir = bpy.path.abspath('//')
+for mod in addon_utils.modules():
+    if mod.bl_info.get("name") == "blenderboxes":
+        module_path = os.path.dirname(mod.__file__)
 
-    userdir = bpy.utils.resource_path('USER')
-    mypath  = os.path.join(blenddir,"boxes_pkg/static/samples")
-
-
+def enum_previews_from_directory_items(self, context):  
     # Icons Directory    
 
-    icons_dir = os.path.dirname(__file__)
-    directory = os.path.join(icons_dir, "boxes_pkg/static/samples")
+    directory = os.path.join(module_path, "boxes_pkg/static/samples")
 
+    
     enum_items = []
 
     if context is None:
@@ -49,7 +44,7 @@ def enum_previews_from_directory_items(self, context):
         # Scan the directory for png files
         image_paths = []
         for fn in os.listdir(directory):
-            if fn.lower().endswith(extensions):
+            if fn.lower().endswith("-thumb.jpg"):
                 image_paths.append(fn)
 
         for i, name in enumerate(image_paths):
@@ -62,9 +57,40 @@ def enum_previews_from_directory_items(self, context):
                 thumb = pcoll.load(filepath, filepath, 'IMAGE')
                 enum_items.append((name, name, "", thumb.icon_id, i))
 
+    enum_items.sort() #Alphabetically
     pcoll.my_previews = enum_items
     pcoll.my_previews_dir = directory
+
     return pcoll.my_previews
+
+class Object_OT_AddButton(Operator):
+    bl_idname = "add.object"
+    bl_label = "Add Object"
+    
+
+    def execute(self, context):
+        selectedBox = context.window_manager.my_previews.replace('-thumb.jpg', '')
+        args = context.scene.args
+
+        allGen = {name.split(".")[-1].lower(): generator for name, generator in boxes.generators.getAllBoxGenerators().items()}
+        
+        box = allGen[selectedBox.lower()]()
+
+        outputPath = os.path.join(module_path, "boxe.svg")
+        
+
+        args.append('--output='+outputPath)
+        box.parseArgs(args)
+        box.open()
+        box.render()
+        box.close()
+
+        bpy.ops.import_curve.svg(filepath=bpy.path.abspath("//boxe.svg"))
+       
+                
+
+                
+        return{'FINISHED'}
 
 
 class Diffuseur_SideBar(Panel):
@@ -83,27 +109,52 @@ class Diffuseur_SideBar(Panel):
 
         wm = context.window_manager
 
+        selectedBox = context.window_manager.my_previews.replace('-thumb.jpg', '')
+
+        row = layout.row(align=True)
+        row.alignment="CENTER"
+        row.label(text=selectedBox)
+
         row = layout.row()
         row.template_icon_view(wm, "my_previews", show_labels=True)
 
+        """ print(generators.ABox.aboxsettings.x) """
 
-        boxe = generators.UBox
+        """ g1 = getattr(generators, selectedBox)
+        g2 = getattr(g1, 'aboxsettings')
+        g3 = getattr(g2, 'x' ) """
+
+
+
+        row = layout.row(align=True)
+        row.operator("add.object", icon="RESTRICT_RENDER_OFF", text=("Add"))
+
+        args = []
+
+        boxe = getattr(generators, selectedBox) 
         box_attributes_names = tuple(
-            p for p in boxe.bl_rna.properties.keys() if p not in {"rna_type", "name", "positional arguments"}
+            p for p in boxe.bl_rna.properties.keys() if p not in {"rna_type", "name", "positionalarguments"}
         )
 
-        for ( attributeName ) in box_attributes_names:  # ABox Settings / Default Settings / ...
-            box = layout.box()
-            box.label(text=attributeName)
-
+        for attributeName in box_attributes_names:  # ABox Settings / Default Settings / ...
             box_group_attributes = getattr(boxe, attributeName)
+
+            box = layout.box()
+            box.label(text=box_group_attributes.name)
+
             group_params_name = tuple( p for p in box_group_attributes.bl_rna.properties.keys() if p not in {"rna_type", "name"} )
 
-            for paramName in group_params_name:  # Title / Category
+            for paramName in group_params_name:  # x / y / outside ...
                 box.prop(box_group_attributes, paramName)
+                value = getattr(box_group_attributes, paramName)
+                args.append( "--" + paramName + "=" + str(value))        
+       
+        
+        bpy.types.Scene.args = args
 
 
-ui_classes = [Diffuseur_SideBar]
+
+ui_classes = [Diffuseur_SideBar, Object_OT_AddButton]
 
 preview_collections = {}
 
@@ -133,11 +184,10 @@ def unregister():
     for cls in ui_classes:
         bpy.utils.unregister_class(cls)
     
-        del WindowManager.my_previews
+    del WindowManager.my_previews
 
     for pcoll in preview_collections.values():
         bpy.utils.previews.remove(pcoll)
-    preview_collections.clear()
 
-    del bpy.types.Scene.my_tool
+    preview_collections.clear()
 

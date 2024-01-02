@@ -21,6 +21,27 @@ import bpy.utils.previews
 from bpy.types import WindowManager
 
 
+class Object_OT_AddButton(Operator):
+    bl_idname = "add.object"
+    bl_label = "Add Object"
+
+    def execute(self, context):
+        selected_preview = context.window_manager.my_previews        
+                
+        category = context.scene.my_tool.cat
+                                                         
+        user = bpy.utils.user_resource('SCRIPTS', "addons\\test2\\")
+        
+        preview_no_ext = selected_preview.split('.')[0]        
+        blendpath = category + ".blend"                                                                                                  
+        blenddir = os.path.join(user + "Blends" + os.sep + category + ".blend" + os.sep + "Object\\")
+          
+        bpy.ops.wm.append(directory=blenddir, filepath=blendpath, filename=preview_no_ext)
+        
+                
+        return{'FINISHED'}
+
+
 def update_category(self, context):
     enum_previews_from_directory_items(self, context)
 
@@ -42,6 +63,7 @@ class Categories(PropertyGroup):
 
 def enum_previews_from_directory_items(self, context):
 
+    category = context.scene.my_tool.cat
     
     #Extensions
     extensions = ('.jpeg', '.jpg', '.png')
@@ -58,6 +80,8 @@ def enum_previews_from_directory_items(self, context):
 
     icons_dir = os.path.dirname(__file__)
     directory = os.path.join(icons_dir, "boxes_pkg/static/samples")
+
+    print(directory)
 
     enum_items = []
 
@@ -102,10 +126,17 @@ class PreviewsExamplePanel(Panel):
     def draw(self, context):
         layout = self.layout
         wm = context.window_manager
+        scene = context.scene
+        mytool = scene.my_tool
+
+        col = layout.column()
+        col.prop(context.scene.my_tool, "cat", text="Category")
 
         row = layout.row()
         row.template_icon_view(wm, "my_previews", show_labels=True)
 
+        row = layout.row()
+        row.operator("add.object", icon="RESTRICT_RENDER_OFF", text="Add")
 
 
 # We can store multiple preview collections here,
@@ -131,6 +162,9 @@ def register():
 
     preview_collections["main"] = pcoll
 
+    bpy.utils.register_class(Object_OT_AddButton)
+    bpy.utils.register_class(Categories)
+    bpy.types.Scene.my_tool = PointerProperty(type=Categories)
     bpy.utils.register_class(PreviewsExamplePanel)
 
 
@@ -142,6 +176,9 @@ def unregister():
         bpy.utils.previews.remove(pcoll)
     preview_collections.clear()
 
+    bpy.utils.unregister_class(Object_OT_AddButton)
+    bpy.utils.unregister_class(Categories)
+    del bpy.types.Scene.my_tool
     bpy.utils.unregister_class(PreviewsExamplePanel)
 
 
